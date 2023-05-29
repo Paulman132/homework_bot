@@ -19,6 +19,7 @@ TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 GLOBAL_VARIABLE_IS_MISSING = 'Отсутствует глобальная переменная'
 GLOBAL_VARIABLE_IS_EMPTY = 'Пустая глобальная переменная'
+HOMEWORKS_NAMES = ['homework_name', 'status']
 
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -63,16 +64,17 @@ def get_api_answer(current_timestamp):
         logger.error(message)
         raise exceptions.GetAPIAnswerException(message)
     try:
-        return homework_statuses.json()
-    except Exception as error:
+        data = homework_statuses.json()
+    except ValueError as error:
         message = f'Ошибка преобразования к формату json: {error}'
         logger.error(message)
         raise exceptions.GetAPIAnswerException(message)
+    return data
 
 
 def check_response(response):
     """Проверяет корректность данных, запрошенных от API Практикум.Домашка."""
-    if type(response) != dict:
+    if not isinstance(response, dict):
         message = (
             f'Тип данных в ответе от API не соотвествует ожидаемому.'
             f' Получен: {type(response)}')
@@ -94,25 +96,21 @@ def check_response(response):
 
 def parse_status(homework):
     """Извлекает из информации о конкретной домашке её статус."""
-    if 'homework_name' not in homework:
-        message = 'Ключ homework_name недоступен'
-        logger.error(message)
-        raise KeyError(message)
-    if 'status' not in homework:
-        message = 'Ключ status недоступен'
-        logger.error(message)
-        raise KeyError(message)
+    for key in HOMEWORKS_NAMES:
+        if key not in homework:
+            message = f'Ключа "{key}" нет в response'
+            logger.error(message)
+            raise KeyError(message)
     homework_name = homework['homework_name']
     homework_status = homework['status']
     if homework_status in HOMEWORK_VERDICTS:
         verdict = HOMEWORK_VERDICTS[homework_status]
         return f'Изменился статус проверки работы ' \
                f'"{homework_name}". {verdict}'
-    else:
-        message = \
-            f'Передан неизвестный статус домашней работы "{homework_status}"'
-        logger.error(message)
-        raise exceptions.ParseStatusException(message)
+    message = (
+            f'Передан неизвестный статус домашней работы "{homework_status}"')
+    logger.error(message)
+    raise exceptions.ParseStatusException(message)
 
 
 def check_tokens():
@@ -140,7 +138,7 @@ def main():
             if not homeworks:
                 logger.info('Статус не обновлен')
             else:
-                homework_status = parse_status(homeworks[0])
+                homework_status = parse_status(*homeworks[:1])
                 if current_status == homework_status:
                     logger.info(homework_status)
                 else:
