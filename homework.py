@@ -62,8 +62,7 @@ def get_api_answer(current_timestamp):
         message = f'Код ответа API: {homework_statuses.status_code}'
         logger.error(message)
         raise exceptions.GetAPIAnswerException(message)
-    data = homework_statuses.json()
-    return data
+    return homework_statuses.json()
 
 
 def check_response(response):
@@ -90,8 +89,8 @@ def check_response(response):
 
 def parse_status(homework):
     """Извлекает из информации о конкретной домашке её статус."""
-    HOMEWORKS_NAMES = ['homework_name', 'status']
-    for key in HOMEWORKS_NAMES:
+    homework_names = ['homework_name', 'status']
+    for key in homework_names:
         if key not in homework:
             message = f'Ключа "{key}" нет в response'
             logger.error(message)
