@@ -19,7 +19,6 @@ TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 GLOBAL_VARIABLE_IS_MISSING = 'Отсутствует глобальная переменная'
 GLOBAL_VARIABLE_IS_EMPTY = 'Пустая глобальная переменная'
-HOMEWORKS_NAMES = ['homework_name', 'status']
 
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -63,12 +62,7 @@ def get_api_answer(current_timestamp):
         message = f'Код ответа API: {homework_statuses.status_code}'
         logger.error(message)
         raise exceptions.GetAPIAnswerException(message)
-    try:
-        data = homework_statuses.json()
-    except ValueError as error:
-        message = f'Ошибка преобразования к формату json: {error}'
-        logger.error(message)
-        raise exceptions.GetAPIAnswerException(message)
+    data = homework_statuses.json()
     return data
 
 
@@ -85,7 +79,7 @@ def check_response(response):
         logger.error(message)
         raise exceptions.CheckResponseException(message)
     homeworks_list = response['homeworks']
-    if type(homeworks_list) != list:
+    if not isinstance(homeworks_list, list):
         message = (
             f'В ответе от API домашки приходят не в виде списка. '
             f'Получен: {type(homeworks_list)}')
@@ -96,6 +90,7 @@ def check_response(response):
 
 def parse_status(homework):
     """Извлекает из информации о конкретной домашке её статус."""
+    HOMEWORKS_NAMES = ['homework_name', 'status']
     for key in HOMEWORKS_NAMES:
         if key not in homework:
             message = f'Ключа "{key}" нет в response'
@@ -138,7 +133,8 @@ def main():
             if not homeworks:
                 logger.info('Статус не обновлен')
             else:
-                homework_status = parse_status(*homeworks[:1])
+                first_homework, *_ = homeworks
+                homework_status = parse_status(first_homework)
                 if current_status == homework_status:
                     logger.info(homework_status)
                 else:
