@@ -105,8 +105,8 @@ def parse_status(homework):
     homework_status = homework['status']
     if homework_status in HOMEWORK_VERDICTS:
         verdict = HOMEWORK_VERDICTS[homework_status]
-        return f'Изменился статус проверки работы ' \
-               f'"{homework_name}". {verdict}'
+        return (f'Изменился статус проверки работы '
+                f'"{homework_name}". {verdict}')
     message = (
             f'Передан неизвестный статус домашней работы "{homework_status}"')
     logger.error(message)
